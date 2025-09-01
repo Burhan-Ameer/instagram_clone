@@ -1,27 +1,73 @@
 from rest_framework import serializers
-from .models import Post,comments,Likes,CustomUser
- 
- 
-class PostSerializer(serializers.Serializer):
-    id =serializers.IntegerField(read_only=True)
-    title=serializers.CharField()
-    content=serializers.CharField()
-    author=serializers.StringRelatedField(read_only=True)
-    # create_at=serializers.DateTimeField()
-    # update_at=serializers.DateTimeField()
+from .models import Post, CustomUser, Comment, Likes
+import cloudinary.utils
+
+class PostCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating posts"""
+    author = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['id', 'content', 'author', 'created_at', 'updated_at', 'image', 'video']
+        read_only_fields = ['id', 'author', 'created_at', 'updated_at']
+
     def create(self, validated_data):
-        current_user=self.context["request"].user
-        return Post.objects.create(author=current_user,**validated_data)
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['author'] = request.user
+        
+        print(f"Creating post with validated_data: {validated_data}")
+        post = Post.objects.create(**validated_data)
+        print(f"Created post - Image: {post.image}, Video: {post.video}")
+        return post
+
+class PostSerializer(serializers.ModelSerializer):
+    """Serializer for reading posts"""
+    author = serializers.StringRelatedField(read_only=True)
+    image = serializers.SerializerMethodField()
+    video = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Post
+        fields = ['id', 'content', 'author', 'created_at', 'updated_at', 'image', 'video']
+
+    def get_image(self, obj):
+        if obj.image:
+            return str(obj.image.url)
+        return None
+
+    def get_video(self, obj):
+        if obj.video:
+            # Get the video URL and convert to mp4 for better browser compatibility
+            video_url = str(obj.video.url)
+            
+            # If the video is not already mp4, transform it
+            if not video_url.endswith('.mp4'):
+                # Use Cloudinary's transformation to convert to mp4
+                public_id = obj.video.public_id
+                video_url = cloudinary.utils.cloudinary_url(
+                    public_id,
+                    resource_type='video',
+                    format='mp4',
+                    quality='auto'
+                )[0]
+            
+            return video_url
+        return None
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    post = serializers.PrimaryKeyRelatedField(queryset=Post.objects.all())
     
-class CommentSerializer(serializers.Serializer):
-    user=serializers.StringRelatedField(read_only=True)
-    message=serializers.CharField()
-    post=serializers.CharField()
-    extra_kwargs={
-        "post":{"write_only":True}
-    }
+    class Meta:
+        model = Comment
+        fields = ['id', 'user', 'message', 'post', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+    
     def create(self, validated_data):
-        return comments.objects.create(**validated_data)
+        current_user = self.context["request"].user
+        return Comment.objects.create(user=current_user, **validated_data)
+    
     # **validated data is just destructuring of pythons dictionary into orms attributes
     
 class LikesSerializer(serializers.ModelSerializer):

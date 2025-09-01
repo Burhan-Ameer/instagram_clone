@@ -1,98 +1,50 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import PostCard from "@/components/post-card"
 import CreatePostModal from "@/components/create-post-modal"
 import Sidebar from "@/components/Sidebar"
-
+import { getPosts, createPost } from "@/services/services"
+import { toast } from "react-toastify"
 // Mock data for posts
-const mockPosts = [
-  {
-    id: "1",
-    author: {
-      name: "John Doe",
-      username: "johndoe",
-      avatar: "/generic-person-avatar.png",
-    },
-    content:
-      "Just launched my new project! Excited to share it with everyone. What do you think about the future of social media? 🚀",
-    image: "/project-launch-screenshot.png",
-    timestamp: "2h",
-    likes: 24,
-    comments: 8,
-    shares: 3,
-    isLiked: false,
-  },
-  {
-    id: "2",
-    author: {
-      name: "Sarah Wilson",
-      username: "sarahw",
-      avatar: "/sarah-wilson-avatar.png",
-    },
-    content:
-      "Beautiful sunset today! Sometimes you just need to take a moment and appreciate the simple things in life. Nature never fails to amaze me. 🌅",
-    image: "/beautiful-sunset-landscape.png",
-    timestamp: "4h",
-    likes: 156,
-    comments: 23,
-    shares: 12,
-    isLiked: true,
-  },
-  {
-    id: "3",
-    author: {
-      name: "Tech Insider",
-      username: "techinsider",
-      avatar: "/tech-news-avatar.png",
-    },
-    content:
-      "Breaking: New AI breakthrough announced today. This could change everything we know about machine learning and artificial intelligence. Thoughts?",
-    timestamp: "6h",
-    likes: 89,
-    comments: 34,
-    shares: 28,
-    isLiked: false,
-  },
-  {
-    id: "4",
-    author: {
-      name: "Design Studio",
-      username: "designstudio",
-      avatar: "/design-studio-avatar.png",
-    },
-    content:
-      "Working on some new UI concepts. Clean, minimal, and user-focused. What are your thoughts on the current design trends?",
-    image: "/ui-design-mockup.png",
-    timestamp: "8h",
-    likes: 67,
-    comments: 15,
-    shares: 9,
-    isLiked: true,
-  },
-]
+
+interface Post {
+  id: string;
+  author: string;
+  content: string;
+  image?: string;
+  video?: string;
+  created_at: string;
+}
 
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState("home")
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false)
-  const [posts, setPosts] = useState(mockPosts)
+  const [posts, setPosts] = useState<Post[]>([])
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
-  const handleCreatePost = (content: string, image?: File) => {
-    const newPost = {
-      id: Date.now().toString(),
-      author: {
-        name: "Your Name",
-        username: "yourusername",
-        avatar: "/ai-avatar.png",
-      },
-      content,
-      image: image ? URL.createObjectURL(image) : undefined,
-      timestamp: "now",
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      isLiked: false,
+  // This is the corrected useEffect hook
+  useEffect(() => {
+    const fetchposts = async () => {
+      try {
+        const data = await getPosts();
+        setPosts(data);
+      } catch (error) {
+        console.error("failed to fetch the posts", error);
+        toast.error("Could not load Posts.");
+      }
+    };
+
+    fetchposts();
+  }, []); // <-- The dependency array is now the second argument
+
+  const handleCreatePost = async (content: string, image?: File, video?: File) => {
+    try {
+      const newPost = await createPost(content, image, video)
+      setPosts((prevPosts) => [newPost, ...prevPosts])
     }
-    setPosts([newPost, ...posts])
+    catch (error) {
+      console.error("Failed to create Post", error)
+      toast.error("Failed to create Post. please try again.")
+    }
   }
 
   // Helper function to get an icon
@@ -187,7 +139,21 @@ export default function HomePage() {
         <div className="w-full">
           {posts.map((post) => (
             <div key={post.id} className="border-b border-neutral-800">
-              <PostCard {...post} />
+              <PostCard
+                id={post.id}
+                author={{
+                  name: post.author,
+                  username: post.author,
+                  avatar: "/generic-person-avatar.png",
+                }}
+                content={post.content}
+                image={post.image} 
+                video={post.video}
+                timestamp={post.created_at}
+                likes={0}
+                comments={0}
+                shares={0}
+              />
             </div>
           ))}
         </div>

@@ -2,9 +2,6 @@ import axios from "axios";
 
 export const API = axios.create({
   baseURL: "http://localhost:8000",
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // now there are two approaches of adding access token every fucking time but this is the professional one
@@ -16,12 +13,22 @@ API.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (config.data instanceof FormData){
+// browser does his job
+
+    }
+else{
+  config.headers["Content-Type"]="application/json"
+}
+
+
+
     return config;
   },
 
   // ON REJECTION
   (error) => {
-    Promise.reject(error);
+  return  Promise.reject(error);
   }
 );
 // response interceptors
@@ -44,7 +51,7 @@ API.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem("refresh_token");
         const response = await axios.post(
-          `${API.defaults.baseURL}/api/token/refresh`,
+          `${API.defaults.baseURL}/api/token/refresh/`, // FIX (C): Added trailing slash
           {
             refresh: refreshToken,
           }
@@ -52,7 +59,7 @@ API.interceptors.response.use(
 
         const { access } = response.data;
         localStorage.setItem("access_token", access);
-        orignalRequest.headers.Authorization = `Bearer${access}`;
+        orignalRequest.headers.Authorization = `Bearer ${access}`; // FIX (B): Added a space after "Bearer"
         return API(orignalRequest);
       } catch (refreshError) {
         console.error("token refresh failed:", refreshError);
@@ -67,7 +74,7 @@ API.interceptors.response.use(
 );
 
 export const getPosts = async () => {
-  const { data } = await API.get("/posts");
+  const { data } = await API.get("/posts/");
   return data;
 };
 
@@ -90,9 +97,31 @@ export const Login = async (usercredentials: {
   password: string;
 }) => {
   try {
-    const { data } = await API.post("api/token/", usercredentials);
+    const { data } = await API.post("/api/token/", usercredentials); // FIX (A): Added leading slash
     return data;
   } catch (e) {
     throw e;
   }
 };
+
+export const createPost = async (
+  content: string,
+  image?: File,
+  video?: File
+) => {
+  const formData = new FormData();
+  formData.append("content", content);
+  if (image) {
+    formData.append("image", image);
+  }
+  if (video) {
+    formData.append("video", video);
+  }
+  try {
+    const { data } = await API.post("/posts/", formData);
+    return data;
+  } catch (e) {
+    throw e;
+  }
+};
+
