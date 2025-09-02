@@ -26,6 +26,7 @@ from api.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("posts/",PostApiView.as_view()),
+    path("post/<int:pk>/",PostDetailApi.as_view()),
     path("comments/",CommentsApiView.as_view()),
     path("postlikes/<int:pk>/",PostLikeListView.as_view()),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

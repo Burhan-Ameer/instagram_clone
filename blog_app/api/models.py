@@ -18,12 +18,8 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     image = CloudinaryField('image', blank=True, null=True)
     video = CloudinaryField('video', blank=True, null=True, resource_type='video')  # Added resource_type
-
-    class Meta:
-        ordering = ['-created_at']
-
     def __str__(self):
-        return f"Post by {self.author.username} at {self.created_at.strftime('%Y-%m-%d')}"
+        return f"Post by {self.author.username}: {self.content[:20]}..."  # Trimmed to 20 characters
 
 class Comment(models.Model):
     user = models.ForeignKey(CustomUser, related_name="user_comments", on_delete=models.CASCADE)
