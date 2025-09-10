@@ -125,3 +125,7 @@ export const createPost = async (
   }
 };
 
+export const deletePost=async(id:any)=>{
+const res=await API.delete(`/post/${id}/`)
+return res
+}

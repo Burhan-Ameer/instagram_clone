@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react"
-import PostCard from "@/components/post-card"
-import CreatePostModal from "@/components/create-post-modal"
-import Sidebar from "@/components/Sidebar"
-import { getPosts, createPost } from "@/services/services"
-import { toast } from "react-toastify"
+import { useEffect, useState } from "react";
+import PostCard from "@/components/post-card";
+import CreatePostModal from "@/components/create-post-modal";
+import Sidebar from "@/components/Sidebar";
+import { getPosts, createPost } from "@/services/services";
+import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { addPost, setPosts } from "@/features/posts/postSlice";
+
 // Mock data for posts
 
 interface Post {
@@ -16,17 +19,26 @@ interface Post {
 }
 
 export default function HomePage() {
-  const [currentPage, setCurrentPage] = useState("home")
-  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false)
-  const [posts, setPosts] = useState<Post[]>([])
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState("home");
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | undefined>(
+    undefined
+  );
+  const dispatch = useDispatch();
+  const posts = useSelector((state: any) => state.posts.items);
 
-  // This is the corrected useEffect hook
   useEffect(() => {
+    const userEmail = localStorage.getItem("user_email");
+    if (userEmail) {
+      setCurrentUserEmail(userEmail);
+    }
+
     const fetchposts = async () => {
       try {
         const data = await getPosts();
-        setPosts(data);
+        dispatch(setPosts(data));
+        console.log(data);
       } catch (error) {
         console.error("failed to fetch the posts", error);
         toast.error("Could not load Posts.");
@@ -36,16 +48,19 @@ export default function HomePage() {
     fetchposts();
   }, []); // <-- The dependency array is now the second argument
 
-  const handleCreatePost = async (content: string, image?: File, video?: File) => {
+  const handleCreatePost = async (
+    content: string,
+    image?: File,
+    video?: File
+  ) => {
     try {
-      const newPost = await createPost(content, image, video)
-      setPosts((prevPosts) => [newPost, ...prevPosts])
+      const newPost = await createPost(content, image, video);
+      dispatch(addPost(newPost));
+    } catch (error) {
+      console.error("Failed to create Post", error);
+      toast.error("Failed to create Post. please try again.");
     }
-    catch (error) {
-      console.error("Failed to create Post", error)
-      toast.error("Failed to create Post. please try again.")
-    }
-  }
+  };
 
   // Helper function to get an icon
   const getIcon = (iconName: string) => {
@@ -66,9 +81,9 @@ export default function HomePage() {
           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
         />
       ),
-    }
-    return icons[iconName as keyof typeof icons]
-  }
+    };
+    return icons[iconName as keyof typeof icons];
+  };
 
   return (
     <div className="flex min-h-screen bg-neutral-900 text-neutral-50 relative">
@@ -89,12 +104,12 @@ export default function HomePage() {
         <Sidebar
           currentPage={currentPage}
           onNavigate={(page) => {
-            setCurrentPage(page)
-            setIsMobileSidebarOpen(false)
+            setCurrentPage(page);
+            setIsMobileSidebarOpen(false);
           }}
           onCreatePost={() => {
-            setIsCreatePostOpen(true)
-            setIsMobileSidebarOpen(false)
+            setIsCreatePostOpen(true);
+            setIsMobileSidebarOpen(false);
           }}
         />
       </div>
@@ -137,22 +152,22 @@ export default function HomePage() {
 
         {/* Posts Feed */}
         <div className="w-full">
-          {posts.map((post) => (
+          {posts.map((post: any) => (
             <div key={post.id} className="border-b border-neutral-800">
               <PostCard
                 id={post.id}
                 author={{
-                  name: post.author,
                   username: post.author,
                   avatar: "/generic-person-avatar.png",
                 }}
                 content={post.content}
-                image={post.image} 
+                image={post.image}
                 video={post.video}
                 timestamp={post.created_at}
                 likes={0}
                 comments={0}
                 shares={0}
+                currentUserEmail={currentUserEmail}
               />
             </div>
           ))}
@@ -249,5 +264,5 @@ export default function HomePage() {
         onPost={handleCreatePost}
       />
     </div>
-  )
+  );
 }
