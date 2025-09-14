@@ -2,6 +2,7 @@ import "./App.css";
 import HomePage from "./pages/UI/Home";
 import LoginPage from "./pages/UI/Login";
 import RegisterPage from "./pages/UI/Register";
+import PostDetail from "./pages/UI/PostDetail";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
   {
     path:"/",
     element:<HomePage/>
+  },
+  {
+    path: "/post/:postId",
+    element: <PostDetail />,
   }
 ]);
 function App() {

@@ -25,6 +25,15 @@ export default function HomePage() {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | undefined>(
     undefined
   );
+  // check if there is content available
+  const [hasMore, setHasMore] = useState(true);
+  // flag to check if the content is loading or not for the first time 
+  const [isLoading, setIsLoading] = useState(false);
+  // flag to check if there is content still available need to be loaded for each time when we click on loadmore button
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // keep track of the page numbers
+  const [page, setPage] = useState(1);
+
   const dispatch = useDispatch();
   const posts = useSelector((state: any) => state.posts.items);
 
@@ -36,12 +45,17 @@ export default function HomePage() {
 
     const fetchposts = async () => {
       try {
-        const data = await getPosts();
+        const data = await getPosts(1);
         dispatch(setPosts(data));
         console.log(data);
+        if (data.length < 10) {
+          setHasMore(false);
+        }
       } catch (error) {
         console.error("failed to fetch the posts", error);
         toast.error("Could not load Posts.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -83,6 +97,31 @@ export default function HomePage() {
       ),
     };
     return icons[iconName as keyof typeof icons];
+  };
+
+  // handling load more functionality means fetching next page
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    try {
+      setIsLoadingMore(true);
+      const nextPage = page + 1;  
+      const newPosts = await getPosts(nextPage);
+      if (newPosts.length === 0) {
+        setHasMore(false);
+        toast.info("No more posts to load");
+      } else {
+        dispatch(setPosts([...posts, ...newPosts]));
+        setPage(nextPage);
+      }
+      if (newPosts.length < 10) {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Failed to Load more posts", error);
+      toast.error("failed to load more posts please try again.");
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   return (
@@ -159,7 +198,9 @@ export default function HomePage() {
                 author={{
                   username: post.author,
                   avatar: "/generic-person-avatar.png",
+                  profile_picture:post.profile_pic,
                 }}
+                author_username={post.author_username}
                 content={post.content}
                 image={post.image}
                 video={post.video}
@@ -171,6 +212,26 @@ export default function HomePage() {
               />
             </div>
           ))}
+
+          {/* Load More Button */}
+          {hasMore && (
+            <div className="flex justify-center p-6 border-b border-neutral-800">
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="flex items-center gap-3 px-6 py-3 bg-sky-600 hover:bg-sky-500 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white font-medium rounded-full transition-colors duration-200"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  <span>Load More Posts</span>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Heart,
   MessageCircle,
@@ -9,13 +9,26 @@ import {
   Trash2,
   Bookmark,
 } from "lucide-react";
-import { deletePost } from "@/services/services";
+import {
+  createLikedPosts,
+  deletePost,
+  getCommentsForPost,
+  getLikedPosts,
+  updatePost,
+} from "@/services/services";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { removePost } from "@/features/posts/postSlice";
+import {
+  removePost,
+  updatePost as updatePostAction,
+} from "@/features/posts/postSlice";
+import CreatePostModal from "./create-post-modal";
+import { useNavigate } from "react-router-dom";
+
 interface Author {
   username: string;
   avatar?: string;
+  profile_picture?: string;
 }
 
 interface PostCardProps {
@@ -30,7 +43,9 @@ interface PostCardProps {
   shares: number;
   isLiked?: boolean;
   currentUserEmail?: string;
+  author_username:string;
 }
+
 // start of the component
 export default function PostCard({
   id,
@@ -44,19 +59,104 @@ export default function PostCard({
   timestamp,
   isLiked = false,
   currentUserEmail,
+  author_username,
 }: PostCardProps) {
   const [liked, setLiked] = useState(isLiked);
   const [likeCount, setLikeCount] = useState(likes);
   const [videoError, setVideoError] = useState(false);
   const [error, setError] = useState<unknown>();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [comment, setComments] = useState(comments);
   const handleVideoError = () => setVideoError(true);
   const handleVideoLoad = () => setVideoError(false);
 
-  const toggleLike = () => {
-    setLiked(!liked);
-    setLikeCount((c) => (liked ? c - 1 : c + 1));
+  // Helper function to get profile picture URL
+  const getProfilePictureUrl = (author: Author) => {
+    // Priority: profile_picture > avatar > fallback to placeholder
+    if (author.profile_picture) {
+      // If it's a relative URL, make it absolute
+      if (author.profile_picture.startsWith('/media/') || author.profile_picture.startsWith('media/')) {
+        return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${author.profile_picture.startsWith('/') ? '' : '/'}${author.profile_picture}`;
+      }
+      return author.profile_picture;
+    }
+    
+    if (author.avatar && author.avatar !== "/generic-person-avatar.png") {
+      return author.avatar;
+    }
+    
+    return null; // Will show fallback
   };
-const dispatch =useDispatch()
+
+  // Get user initials for fallback
+  const getUserInitials = (auther_username:string) => {
+    if (author_username) {
+      return `${author_username.charAt(0)}`.toUpperCase();
+    }
+    return author_username.charAt(0).toUpperCase();
+  };
+
+  const profilePictureUrl = getProfilePictureUrl(author);
+
+  // FETCHING THE LIKES OF POST
+  useEffect(() => {
+    // fetching the length of comments
+    const fetchComments = async () => {
+      try {
+        const res = await getCommentsForPost(id);
+        console.log(res);
+        if (res.data && Array.isArray(res.data)) {
+          setComments(res.data.length);
+        }
+      } catch (err) {
+        console.error("failed to fetch comments:", err);
+      }
+    };
+    fetchComments()
+    
+    // fetching the likes from the api
+    const fetchLikes = async () => {
+      try {
+        const res = await getLikedPosts(id);
+        console.log(res);
+        if (res.data && Array.isArray(res.data)) {
+          setLikeCount(res.data.length);
+        }
+      } catch (err) {
+        console.error("failed to fetch likes:", err);
+      }
+    };
+    fetchLikes();
+  }, [id]);
+
+  // like toggel handler
+  const toggleLike = async (id: any) => {
+    try {
+      const wasLiked = liked;
+      setLiked(!liked);
+      setLikeCount((prev) => (wasLiked ? prev - 1 : prev + 1));
+
+      // Make API call to toggle like
+      await createLikedPosts(id);
+
+      // Refresh likes count
+      const res = await getLikedPosts(id);
+      if (res.data && Array.isArray(res.data)) {
+        setLikeCount(res.data.length);
+      }
+    } catch (err) {
+      // Revert on error
+      setLiked(liked);
+      setLikeCount(likeCount);
+      console.error("Toggle like error:", err);
+      toast.error("Failed to update like");
+    }
+  };
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // author check function (fyi this is immediate call function read the w3school for further information )
   const isOwner = (() => {
     if (!currentUserEmail || !author?.username) {
       return false;
@@ -66,18 +166,22 @@ const dispatch =useDispatch()
       author.username.trim().toLowerCase()
     );
   })();
+
+  // DELETE  FUNCTION HANDLER
   const handleDelete = async (id: any) => {
     console.log("Deleting post with ID:", id);
     try {
       const res = await deletePost(id);
       console.log("Delete response:", res);
-      
+
       if (res.status === 204) {
         console.log("Dispatching removePost for ID:", id);
         dispatch(removePost(id));
         toast.success("Content deleted successfully");
-        
-        const modal = document.getElementById(`my_modal_${id}`) as HTMLDialogElement;
+
+        const modal = document.getElementById(
+          `my_modal_${id}`
+        ) as HTMLDialogElement;
         modal?.close();
       }
     } catch (err) {
@@ -87,35 +191,82 @@ const dispatch =useDispatch()
     }
   };
 
+  const handleUpdatePost = async (
+    newContent: string,
+    newImage?: File,
+    newVideo?: File
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("content", newContent);
+      if (newImage) {
+        formData.append("image", newImage);
+      }
+      if (newVideo) {
+        formData.append("video", newVideo);
+      }
+
+      const res = await updatePost(id, formData);
+      if (res.status === 200) {
+        toast.success("Post updated successfully");
+
+        // Update the Redux store with the new data
+        dispatch(
+          updatePostAction({
+            id,
+            content: newContent,
+            image: newImage ? URL.createObjectURL(newImage) : image,
+            video: newVideo ? URL.createObjectURL(newVideo) : video,
+            // Keep other existing properties
+          })
+        );
+
+        // Close the modal
+        setIsEditModalOpen(false);
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error("Failed to update post");
+    }
+  };
+
   return (
     <>
-      <article className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 max-w-2xl mx-auto mb-4">
+      <article className=" bg-neutral-900  text-white rounded-xl p-2 max-w-2xl mx-auto mb-4">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-3 text-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-              <img
-                src={author.avatar || ""}
-                alt={`${author.username}'s avatar`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // If image fails, show first letter of name
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.parentElement!.innerHTML = `
-                  <div class="w-full h-full flex items-center justify-center bg-indigo-500 text-white font-medium">
-                    ${author.username.charAt(0).toUpperCase()}
-                  </div>
-                `;
-                }}
-              />
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 relative">
+              {profilePictureUrl ? (
+                <img
+                  src={profilePictureUrl}
+                  alt={`${author.username}'s profile picture`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // If image fails to load, hide it and show fallback
+                    e.currentTarget.style.display = 'none';
+                    const fallbackDiv = e.currentTarget.nextElementSibling as HTMLDivElement;
+                    if (fallbackDiv) {
+                      fallbackDiv.style.display = 'flex';
+                    }
+                  }}
+                />
+              ) : null}
+              {/* Fallback avatar with initials */}
+              <div 
+                className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm ${profilePictureUrl ? 'hidden' : 'flex'}`}
+                style={{ display: profilePictureUrl ? 'none' : 'flex' }}
+              >
+                {getUserInitials(author_username)}
+              </div>
             </div>
 
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
-                <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-                  {author.username}
+                <span className="font-semibold text-sm">
+                { author_username}
                 </span>
-                {author && author.username && (
+                {author && author_username && (
                   <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-2.5 h-2.5 text-white"
@@ -131,7 +282,7 @@ const dispatch =useDispatch()
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs">
+              <div className="flex items-center gap-2 text-xs">
                 <span>@{author.username}</span>
                 <span>•</span>
                 <span>{new Date(timestamp).toLocaleString()}</span>
@@ -140,7 +291,7 @@ const dispatch =useDispatch()
           </div>
 
           <details className="dropdown dropdown-end">
-            <summary className="btn bg-white shadow-none border-0 btn-circle">
+            <summary className="btn bg-neutral-900 text-white shadow-none border-0 btn-circle">
               <EllipsisVertical className="h-5 " />
             </summary>
             <ul className="menu dropdown-content bg-white dark:bg-gray-800hover: text-zinc-950 dark:text-gray-200 rounded-box w-32 shadow-lg border border-gray-200 dark:border-gray-700 z-10">
@@ -148,7 +299,13 @@ const dispatch =useDispatch()
                 <>
                   <li>
                     <a
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // Close the dropdown
+                        const dropdown = e.currentTarget.closest('details') as HTMLDetailsElement;
+                        if (dropdown) dropdown.open = false;
+                        
+                        // Open the modal
                         const modal = document.getElementById(
                           `my_modal_${id}`
                         ) as HTMLDialogElement;
@@ -160,7 +317,18 @@ const dispatch =useDispatch()
                     </a>
                   </li>
                   <li>
-                    <a className="hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between">
+                    <a
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // Close the dropdown
+                        const dropdown = e.currentTarget.closest('details') as HTMLDetailsElement;
+                        if (dropdown) dropdown.open = false;
+                        
+                        // Open edit modal
+                        setIsEditModalOpen(true);
+                      }}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between"
+                    >
                       Edit <Edit3 className="h-4" />
                     </a>
                   </li>
@@ -168,13 +336,25 @@ const dispatch =useDispatch()
               )}
 
               <li>
-                <a className="hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between">
+                <a 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Close the dropdown
+                    const dropdown = e.currentTarget.closest('details') as HTMLDetailsElement;
+                    if (dropdown) dropdown.open = false;
+                    
+                    // Add your save logic here
+                    console.log("Save clicked");
+                  }}
+                  className="hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between"
+                >
                   Save <Bookmark className="h-4" />
                 </a>
               </li>
             </ul>
           </details>
         </div>
+
         {/* delete modal is here the dialogue box  */}
         <dialog
           id={`my_modal_${id}`}
@@ -192,7 +372,9 @@ const dispatch =useDispatch()
                 Confirm Delete
               </button>
               <form method="dialog">
-                <button type="submit" className="btn ml-2">Close</button>
+                <button type="submit" className="btn ml-2">
+                  Close
+                </button>
               </form>
             </div>
           </div>
@@ -200,7 +382,7 @@ const dispatch =useDispatch()
 
         {/* Content */}
         <div className="mb-4">
-          <p className="text-gray-800 dark:text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
+          <p className=" text-sm leading-relaxed whitespace-pre-wrap">
             {content}
           </p>
         </div>
@@ -251,7 +433,7 @@ const dispatch =useDispatch()
         {/* Actions */}
         <div className="flex items-center gap-6">
           <button
-            onClick={toggleLike}
+            onClick={() => toggleLike(id)}
             className={`h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-md flex items-center ${
               liked ? "text-red-500" : ""
             }`}
@@ -260,9 +442,12 @@ const dispatch =useDispatch()
             <span className="text-xs font-medium">{likeCount}</span>
           </button>
 
-          <button className="h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded-md flex items-center">
+          <button
+            onClick={() => navigate(`/post/${id}`)}
+            className="h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded-md flex items-center"
+          >
             <MessageCircle className="w-4 h-4" />
-            <span className="text-xs font-medium">{comments}</span>
+            <span className="text-xs font-medium">{comment}</span>
           </button>
 
           <button className="h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/10 rounded-md flex items-center">
@@ -275,6 +460,19 @@ const dispatch =useDispatch()
           </button>
         </div>
       </article>
+
+      {/* Add the edit modal */}
+      <CreatePostModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onPost={handleUpdatePost}
+        mode="update"
+        initialData={{
+          content,
+          image,
+          video,
+        }}
+      />
     </>
   );
 }

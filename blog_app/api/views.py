@@ -7,11 +7,13 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.permissions import (AllowAny,IsAdminUser,IsAuthenticated)
-
+from rest_framework.pagination import PageNumberPagination
 class PostApiView(APIView):
     def get(self, request):
         posts = Post.objects.all().order_by('-created_at')  # Order by newest first
-        serializer = PostSerializer(posts, many=True, context={'request': request})
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(posts, request)
+        serializer = PostSerializer(result_page, many=True, context={'request': request})
         return Response(serializer.data)
     
     def post(self, request):
@@ -24,7 +26,7 @@ class PostApiView(APIView):
    
             new_post = serializer.save()
          
-            # Use PostSerializer for response
+            # Use PostSerializer     for response
             response_serializer = PostSerializer(new_post, context={'request': request})
            
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -65,7 +67,9 @@ class PostDetailApi(APIView):
 class CommentsApiView(APIView):
     def get(self,request):
         data=Comment.objects.all().order_by("-created_at")
-        serializer=CommentSerializer(data,many=True)
+        paginator=PageNumberPagination()
+        result_page=paginator.paginate_queryset(data,request)
+        serializer=CommentSerializer(result_page,many=True)
         return Response(serializer.data)
     def post(self,request):
         serializer=CommentSerializer(data=request.data,context={"request":request})

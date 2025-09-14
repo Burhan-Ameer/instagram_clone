@@ -23,19 +23,23 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     """Serializer for reading posts"""
+    profile_pic=serializers.SerializerMethodField()
+    author_username=serializers.SerializerMethodField()
+    
     author = serializers.StringRelatedField(read_only=True)
     image = serializers.SerializerMethodField()
     video = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ['id', 'content', 'author', 'created_at', 'updated_at', 'image', 'video']
+        fields = ['id', 'content', 'author', 'created_at', 'updated_at', 'image', 'video',"profile_pic","author_username"]
 
     def get_image(self, obj):
         if obj.image:
             return str(obj.image.url)
         return None
-
+    def get_author_username(self,obj):
+        return obj.author.username
     def get_video(self, obj):
         if obj.video:
             # Get the video URL and convert to mp4 for better browser compatibility
@@ -54,6 +58,11 @@ class PostSerializer(serializers.ModelSerializer):
             
             return video_url
         return None
+    def get_profile_pic(self,obj):
+        if obj.author.profile_pic:
+            return str(obj.author.profile_pic.url)
+        return None
+        
 
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
