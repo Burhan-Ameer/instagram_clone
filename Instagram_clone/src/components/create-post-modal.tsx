@@ -1,25 +1,48 @@
 import { API } from "@/services/services";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // 1. UPDATE THE INTERFACE: Add the optional 'video' parameter to the onPost function.
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPost: (content: string, image?: File, video?: File) => void;
+  // Add new props for update mode
+  mode?: 'create' | 'update';
+  initialData?: {
+    content?: string;
+    image?: string;
+    video?: string;
+  };
 }
 
 export default function CreatePostModal({
   isOpen,
   onClose,
   onPost,
+  mode = 'create',
+  initialData,
 }: CreatePostModalProps) {
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  // 2. ADD STATE FOR VIDEO: Create state variables for the video file and its preview URL.
   const [video, setVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
+
+  // Load initial data when in update mode
+  useEffect(() => {
+    if (mode === 'update' && initialData) {
+      setContent(initialData.content || '');
+      setImagePreview(initialData.image || null);
+      setVideoPreview(initialData.video || null);
+    } else if (mode === 'create') {
+      // Reset form for create mode
+      setContent('');
+      setImage(null);
+      setImagePreview(null);
+      setVideo(null);
+      setVideoPreview(null);
+    }
+  }, [mode, initialData, isOpen]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,12 +81,14 @@ export default function CreatePostModal({
     if (content.trim()) {
       // 4. UPDATE ONPOST CALL: Pass the image or video file to the callback.
       onPost(content, image || undefined, video || undefined);
-      // Reset all states
-      setContent("");
-      setImage(null);
-      setImagePreview(null);
-      setVideo(null);
-      setVideoPreview(null);
+      // Only reset if creating, not updating
+      if (mode === 'create') {
+        setContent("");
+        setImage(null);
+        setImagePreview(null);
+        setVideo(null);
+        setVideoPreview(null);
+      }
       onClose();
     }
   };
@@ -114,7 +139,9 @@ export default function CreatePostModal({
     <div className="fixed inset-0 bg-neutral-950/80 flex items-center justify-center z-50 p-2 md:p-4">
       <div className="bg-neutral-800 text-neutral-50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-neutral-700">
-          <h2 className="text-xl font-bold">Create Post</h2>
+          <h2 className="text-xl font-bold">
+            {mode === 'create' ? 'Create Post' : 'Edit Post'}
+          </h2>
           <button
             onClick={onClose}
             className="text-neutral-400 hover:text-neutral-50 p-1 rounded-full hover:bg-neutral-700 transition-colors"
@@ -245,7 +272,7 @@ export default function CreatePostModal({
               disabled={!content.trim() || content.length > MAX_CHARACTERS}
               className="bg-sky-600 text-white px-6 py-2 rounded-full font-bold text-base shadow-lg hover:bg-sky-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Post
+              {mode === 'create' ? 'Post' : 'Update'}
             </button>
           </div>
         </div>

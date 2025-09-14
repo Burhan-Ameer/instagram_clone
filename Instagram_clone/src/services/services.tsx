@@ -13,22 +13,18 @@ API.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    if (config.data instanceof FormData){
-// browser does his job
-
+    if (config.data instanceof FormData) {
+      // browser does his job
+    } else {
+      config.headers["Content-Type"] = "application/json";
     }
-else{
-  config.headers["Content-Type"]="application/json"
-}
-
-
 
     return config;
   },
 
   // ON REJECTION
   (error) => {
-  return  Promise.reject(error);
+    return Promise.reject(error);
   }
 );
 // response interceptors
@@ -73,8 +69,8 @@ API.interceptors.response.use(
   }
 );
 
-export const getPosts = async () => {
-  const { data } = await API.get("/posts/");
+export const getPosts = async (page:number=1) => {
+  const { data } = await API.get(`/posts/?page=${page}`);
   return data;
 };
 
@@ -125,7 +121,70 @@ export const createPost = async (
   }
 };
 
-export const deletePost=async(id:any)=>{
-const res=await API.delete(`/post/${id}/`)
-return res
-}
+export const deletePost = async (id: any) => {
+  const res = await API.delete(`/post/${id}/`);
+  return res;
+};
+
+export const updatePost = async (id: any, formData: FormData) => {
+  try {
+    const res = await API.put(`/post/${id}/`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return res;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const getLikedPosts = async (id: any) => {
+  try {
+    const res = await API.get(`/postlikes/${id}/`);
+    return res;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const createLikedPosts = async (id: any) => {
+  try {
+    const res = await API.post(`/postlikes/${id}/`);
+    return res;
+  } catch (err) {
+    throw err;
+  }
+};
+
+// Add these functions to your existing services
+
+export const getPostById = async (id: string) => {
+  try {
+    const res = await API.get(`/post/${id}/`);
+    return res;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const getCommentsForPost = async (postId: string) => {
+  try {
+    const res = await API.get(`/comments/?post=${postId}`);
+    return res;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const createComment = async (commentData: {
+  message: string;
+  post: string;
+}) => {
+  try {
+    const res = await API.post("/comments/", commentData);
+    return res;
+  } catch (err) {
+    throw err;
+  }
+};

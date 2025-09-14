@@ -25,14 +25,14 @@ export default function LoginPage() {
       // If the above line doesn't throw, the request was successful
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
-
+        
       // 2. Show success toast
       toast.success("Logged in successfully!");
 
       // Navigate after a short delay to allow the user to see the toast
       setTimeout(() => {
         navigate("/"); // Or to a dashboard page
-      }, 1500);
+      }, 1000);
 
     } catch (err: any) {
       let errorMessage = "An unknown error occurred. Please try again.";
@@ -127,9 +127,9 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-lg font-bold text-lg hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors duration-200"
+              className="btn btn-lg w-full bg-zinc-950 text-white"
             >
-             Signin
+             Sign in
             </button>
           </form>
 
