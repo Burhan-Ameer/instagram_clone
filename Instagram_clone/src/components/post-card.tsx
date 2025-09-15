@@ -43,7 +43,7 @@ interface PostCardProps {
   shares: number;
   isLiked?: boolean;
   currentUserEmail?: string;
-  author_username:string;
+  author_username: string;
 }
 
 // start of the component
@@ -75,21 +75,28 @@ export default function PostCard({
     // Priority: profile_picture > avatar > fallback to placeholder
     if (author.profile_picture) {
       // If it's a relative URL, make it absolute
-      if (author.profile_picture.startsWith('/media/') || author.profile_picture.startsWith('media/')) {
-        return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${author.profile_picture.startsWith('/') ? '' : '/'}${author.profile_picture}`;
+      if (
+        author.profile_picture.startsWith("/media/") ||
+        author.profile_picture.startsWith("media/")
+      ) {
+        return `${
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
+        }${author.profile_picture.startsWith("/") ? "" : "/"}${
+          author.profile_picture
+        }`;
       }
       return author.profile_picture;
     }
-    
+
     if (author.avatar && author.avatar !== "/generic-person-avatar.png") {
       return author.avatar;
     }
-    
+
     return null; // Will show fallback
   };
 
   // Get user initials for fallback
-  const getUserInitials = (auther_username:string) => {
+  const getUserInitials = (auther_username: string) => {
     if (author_username) {
       return `${author_username.charAt(0)}`.toUpperCase();
     }
@@ -112,8 +119,8 @@ export default function PostCard({
         console.error("failed to fetch comments:", err);
       }
     };
-    fetchComments()
-    
+    fetchComments();
+
     // fetching the likes from the api
     const fetchLikes = async () => {
       try {
@@ -244,18 +251,21 @@ export default function PostCard({
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     // If image fails to load, hide it and show fallback
-                    e.currentTarget.style.display = 'none';
-                    const fallbackDiv = e.currentTarget.nextElementSibling as HTMLDivElement;
+                    e.currentTarget.style.display = "none";
+                    const fallbackDiv = e.currentTarget
+                      .nextElementSibling as HTMLDivElement;
                     if (fallbackDiv) {
-                      fallbackDiv.style.display = 'flex';
+                      fallbackDiv.style.display = "flex";
                     }
                   }}
                 />
               ) : null}
               {/* Fallback avatar with initials */}
-              <div 
-                className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm ${profilePictureUrl ? 'hidden' : 'flex'}`}
-                style={{ display: profilePictureUrl ? 'none' : 'flex' }}
+              <div
+                className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm ${
+                  profilePictureUrl ? "hidden" : "flex"
+                }`}
+                style={{ display: profilePictureUrl ? "none" : "flex" }}
               >
                 {getUserInitials(author_username)}
               </div>
@@ -263,9 +273,7 @@ export default function PostCard({
 
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
-                <span className="font-semibold text-sm">
-                { author_username}
-                </span>
+                <span className="font-semibold text-sm">{author_username}</span>
                 {author && author_username && (
                   <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                     <svg
@@ -302,9 +310,11 @@ export default function PostCard({
                       onClick={(e) => {
                         e.preventDefault();
                         // Close the dropdown
-                        const dropdown = e.currentTarget.closest('details') as HTMLDetailsElement;
+                        const dropdown = e.currentTarget.closest(
+                          "details"
+                        ) as HTMLDetailsElement;
                         if (dropdown) dropdown.open = false;
-                        
+
                         // Open the modal
                         const modal = document.getElementById(
                           `my_modal_${id}`
@@ -321,9 +331,11 @@ export default function PostCard({
                       onClick={(e) => {
                         e.preventDefault();
                         // Close the dropdown
-                        const dropdown = e.currentTarget.closest('details') as HTMLDetailsElement;
+                        const dropdown = e.currentTarget.closest(
+                          "details"
+                        ) as HTMLDetailsElement;
                         if (dropdown) dropdown.open = false;
-                        
+
                         // Open edit modal
                         setIsEditModalOpen(true);
                       }}
@@ -336,13 +348,15 @@ export default function PostCard({
               )}
 
               <li>
-                <a 
+                <a
                   onClick={(e) => {
                     e.preventDefault();
                     // Close the dropdown
-                    const dropdown = e.currentTarget.closest('details') as HTMLDetailsElement;
+                    const dropdown = e.currentTarget.closest(
+                      "details"
+                    ) as HTMLDetailsElement;
                     if (dropdown) dropdown.open = false;
-                    
+
                     // Add your save logic here
                     console.log("Save clicked");
                   }}
@@ -434,7 +448,7 @@ export default function PostCard({
         <div className="flex items-center gap-6">
           <button
             onClick={() => toggleLike(id)}
-            className={`h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-md flex items-center ${
+            className={`h-8  gap-2 text-gray-500 dark:text-gray-400 hover:text-red-500   rounded-md flex items-center ${
               liked ? "text-red-500" : ""
             }`}
           >
@@ -444,18 +458,13 @@ export default function PostCard({
 
           <button
             onClick={() => navigate(`/post/${id}`)}
-            className="h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded-md flex items-center"
+            className="h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-500  rounded-md flex items-center"
           >
             <MessageCircle className="w-4 h-4" />
             <span className="text-xs font-medium">{comment}</span>
           </button>
 
-          <button className="h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/10 rounded-md flex items-center">
-            <Repeat2 className="w-4 h-4" />
-            <span className="text-xs font-medium">{shares}</span>
-          </button>
-
-          <button className="h-8 px-2 text-gray-500 dark:text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10 rounded-md flex items-center">
+          <button className="h-8 px-2 text-gray-500 dark:text-gray-400 hover:text-purple-500  rounded-md flex items-center">
             <Send className="w-4 h-4" />
           </button>
         </div>
