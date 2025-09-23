@@ -1,6 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-
 interface Comment {
   id: string;
   text: string;
@@ -16,15 +15,17 @@ export const commentSlice = createSlice({
   name: "comments",
   initialState,
   reducers: {
-    setcomments: (state, action: PayloadAction<Comment[]>) => {
+    setComments: (state, action: PayloadAction<Comment[]>) => {
       state.items = action.payload;
     },
     addComments: (state, action: PayloadAction<Comment>) => {
       state.items.push(action.payload);
     },
-    removeComments:(state,action)=>{
-        state.items = state.items.filter((item) => item.id !== action.payload.id);
-    }
+    removeComments: (state, action: PayloadAction<Comment>) => {
+      state.items = state.items.filter((item) => item.id !== action.payload.id);
+    },
   },
 });
-export const {setcomments,addComments,removeComments} =commentSlice.actions
+
+export const { setComments, addComments, removeComments } = commentSlice.actions;
+export default commentSlice.reducer;

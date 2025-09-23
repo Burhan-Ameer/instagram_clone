@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Heart,
   MessageCircle,
-  Repeat2,
+  // Repeat2,
   Send,
   EllipsisVertical,
   Edit3,
@@ -53,10 +53,10 @@ export default function PostCard({
   content,
   image,
   video,
+  timestamp,
   likes,
   comments,
-  shares,
-  timestamp,
+  // shares,
   isLiked = false,
   currentUserEmail,
   author_username,
@@ -64,7 +64,7 @@ export default function PostCard({
   const [liked, setLiked] = useState(isLiked);
   const [likeCount, setLikeCount] = useState(likes);
   const [videoError, setVideoError] = useState(false);
-  const [error, setError] = useState<unknown>();
+  // const [error, setError] = useState<unknown>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(comments);
   const handleVideoError = () => setVideoError(true);
@@ -195,7 +195,7 @@ export default function PostCard({
       }
     } catch (err) {
       console.error("Delete error:", err);
-      setError(err);
+      // setError(err);
       toast.error("Failed to delete post");
     }
   };
