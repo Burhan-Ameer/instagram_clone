@@ -244,7 +244,7 @@ export default function PostDetail() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-sky-600 text-white font-medium text-lg">
-                  {post.author.username.charAt(0).toUpperCase()}
+                  {post.author_username.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>

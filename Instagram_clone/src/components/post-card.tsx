@@ -66,7 +66,7 @@ export default function PostCard({
   const [videoError, setVideoError] = useState(false);
   const [error, setError] = useState<unknown>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [comment, setComments] = useState(comments);
+  const [commentCount, setCommentCount] = useState(comments);
   const handleVideoError = () => setVideoError(true);
   const handleVideoLoad = () => setVideoError(false);
 
@@ -96,11 +96,11 @@ export default function PostCard({
   };
 
   // Get user initials for fallback
-  const getUserInitials = (auther_username: string) => {
-    if (author_username) {
-      return `${author_username.charAt(0)}`.toUpperCase();
+  const getUserInitials = (author_username: string) => {
+    if (author_username && typeof author_username === "string") {
+      return author_username.charAt(0).toUpperCase();
     }
-    return author_username.charAt(0).toUpperCase();
+    return "?"; // Safe fallback for undefined/null
   };
 
   const profilePictureUrl = getProfilePictureUrl(author);
@@ -111,9 +111,9 @@ export default function PostCard({
     const fetchComments = async () => {
       try {
         const res = await getCommentsForPost(id);
-        console.log(res);
-        if (res.data && Array.isArray(res.data)) {
-          setComments(res.data.length);
+        console.log(`the comments for this post id ${id} `, res.data);
+        if (res.data && Array.isArray(res.data)) {  
+          setCommentCount(res.data.length);
         }
       } catch (err) {
         console.error("failed to fetch comments:", err);
@@ -165,13 +165,15 @@ export default function PostCard({
 
   // author check function (fyi this is immediate call function read the w3school for further information )
   const isOwner = (() => {
-    if (!currentUserEmail || !author?.username) {
-      return false;
-    }
-    return (
-      currentUserEmail.trim().toLowerCase() ===
-      author.username.trim().toLowerCase()
-    );
+    const me =
+      (currentUserEmail ||
+        localStorage.getItem("user_email") ||
+        localStorage.getItem("user_username") ||
+        ""
+      ).trim().toLowerCase();
+    const authorEmail = (author?.username || "").trim().toLowerCase(); // author is email from API
+    if (!me || !authorEmail) return false;
+    return me === authorEmail;
   })();
 
   // DELETE  FUNCTION HANDLER
@@ -461,7 +463,7 @@ export default function PostCard({
             className="h-8 px-2 gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-500  rounded-md flex items-center"
           >
             <MessageCircle className="w-4 h-4" />
-            <span className="text-xs font-medium">{comment}</span>
+            <span className="text-xs font-medium">{commentCount}</span>
           </button>
 
           <button className="h-8 px-2 text-gray-500 dark:text-gray-400 hover:text-purple-500  rounded-md flex items-center">

@@ -27,3 +27,4 @@ export const commentSlice = createSlice({
     }
   },
 });
+export const {setcomments,addComments,removeComments} =commentSlice.actions

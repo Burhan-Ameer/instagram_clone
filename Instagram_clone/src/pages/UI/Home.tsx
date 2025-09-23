@@ -33,12 +33,16 @@ export default function HomePage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   // keep track of the page numbers
   const [page, setPage] = useState(1);
+  
 
   const dispatch = useDispatch();
   const posts = useSelector((state: any) => state.posts.items);
 
   useEffect(() => {
-    const userEmail = localStorage.getItem("user_email");
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      localStorage.getItem("user_username") ||
+      undefined;
     if (userEmail) {
       setCurrentUserEmail(userEmail);
     }
@@ -196,7 +200,7 @@ export default function HomePage() {
               <PostCard
                 id={post.id}
                 author={{
-                  username: post.author,
+                  username: post.author_username,
                   avatar: "/generic-person-avatar.png",
                   profile_picture:post.profile_pic,
                 }}

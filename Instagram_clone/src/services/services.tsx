@@ -168,7 +168,7 @@ export const getPostById = async (id: string) => {
   }
 };
 
-export const getCommentsForPost = async (postId: string) => {
+export const getCommentsForPost = async (postId:any) => {
   try {
     const res = await API.get(`/comments/?post=${postId}`);
     return res;
