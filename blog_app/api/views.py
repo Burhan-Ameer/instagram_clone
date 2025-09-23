@@ -66,23 +66,25 @@ class PostDetailApi(APIView):
 
 class CommentsApiView(APIView):
     def get_permissions(self):
-        self.permission_classes=[AllowAny]
-        if self.request.method=="POST":
-            self.permission_classes=[IsAuthenticated]
+        self.permission_classes = [AllowAny]
+        if self.request.method == "POST":
+            self.permission_classes = [IsAuthenticated]
         return super().get_permissions()
-    def get(self,request):
-        data=Comment.objects.all().order_by("-created_at")
+    
+    def get(self, request):
+        data = Comment.objects.all().order_by("-created_at")
         # getting the post id from the url 
-        post_id=request.query_params.get("post")
+        post_id = request.query_params.get("post")
         if post_id:
-            data=data.filter(post_id=post_id)
-        data=data.order_by("-created_at")
-        paginator=PageNumberPagination()
-        result_page=paginator.paginate_queryset(data,request)
-        serializer=CommentSerializer(result_page,many=True)
+            data = data.filter(post_id=post_id)
+        data = data.order_by("-created_at")
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(data, request)
+        serializer = CommentSerializer(result_page, many=True)
         return Response(serializer.data)
-    def post(self,request):
-        serializer=CommentSerializer(data=request.data,context={"request":request})
+    
+    def post(self, request):
+        serializer = CommentSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -90,21 +92,28 @@ class CommentsApiView(APIView):
        
 
 class CommentUpdateDestroyApiView(APIView):
-    def put(self,request,pk):
-        data=get_object_or_404(Comment,pk=pk)
-        serializer=CommentSerializer(instance=data,data=request.data,partial=True,context={"request":request})
+    permission_classes = [IsAuthenticated]
+    
+    def put(self, request, pk):
+        comment = get_object_or_404(Comment, pk=pk)
+        if comment.user != request.user:
+            return Response({"error": "You don't have permissions to edit this comment"}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = CommentSerializer(instance=comment, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data,status=status.HTTP_200_OK)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def delete(self,request,pk):
-        comment=get_object_or_404(Comment,pk=pk)
-        if comment.user!=request.user:
-            return Response({"error":"You dont have permissions to delete this comment "})
-        else:
-            comment.delete()
-            return Response({"message":"comment deleted successfully"},status=status.HTTP_200_OK)
+    def delete(self, request, pk):
+        comment = get_object_or_404(Comment, pk=pk)
+        if comment.user != request.user:
+            return Response({"error": "You don't have permissions to delete this comment"}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        comment.delete()
+        return Response({"message": "Comment deleted successfully"}, status=status.HTTP_200_OK)
 
        
 class PostLikeListView(APIView):

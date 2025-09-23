@@ -24,8 +24,8 @@ INSTALLED_APPS = [
     "corsheaders",
     'cloudinary',
     'cloudinary_storage',
-   # Needed for swagger UI
-    'drf_yasg',
+   # Needed for swagger UI (uncomment when drf_yasg is installed)
+    # 'drf_yasg',
     
 ]
 
@@ -146,6 +146,4 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 10,
-     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-
 }
