@@ -1,16 +1,29 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, ArrowLeft, Send, MoreHorizontal, Edit3, Trash2, Share, Bookmark } from "lucide-react";
-import { 
-  getPostById, 
-  getCommentsForPost, 
+import {
+  Heart,
+  MessageCircle,
+  ArrowLeft,
+  Send,
+  MoreHorizontal,
+  Edit3,
+  Trash2,
+  Share,
+  Bookmark,
+} from "lucide-react";
+import {
+  getPostById,
+  getCommentsForPost,
   createComment,
   createLikedPosts,
   getLikedPosts,
+  UpdateAPIComment,
   // updateComment,
   // deleteComment,
 } from "@/services/services";
 import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { setcomments, updateComment } from "@/features/posts/commentSlice";
 
 interface Author {
   username: string;
@@ -38,26 +51,33 @@ interface Comment {
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
-  
+
   const [post, setPost] = useState<Post | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
+  // const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentText, setEditCommentText] = useState("");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
-  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
+    null
+  );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  
+
   const [currentUser, setCurrentUser] = useState<string>("");
 
+  const dispatch = useDispatch();
+  const comments = useSelector((state: any) => state.comments.items);
   useEffect(() => {
-    const username = localStorage.getItem("user_username") || localStorage.getItem("user_email") || "";
+    const username =
+      localStorage.getItem("user_username") ||
+      localStorage.getItem("user_email") ||
+      "";
     setCurrentUser(username);
 
     if (postId) {
@@ -83,7 +103,7 @@ export default function PostDetail() {
   const fetchComments = async () => {
     try {
       const res = await getCommentsForPost(postId!);
-      setComments(res.data);
+      dispatch(setcomments(res.data));
     } catch (error) {
       console.error("Failed to fetch comments:", error);
     }
@@ -143,13 +163,16 @@ export default function PostDetail() {
   const handleUpdateComment = async () => {
     if (!editCommentText.trim() || !editingCommentId) return;
     try {
-      // await updateComment(editingCommentId, { message: editCommentText });
-      await fetchComments();
+      const res = await UpdateAPIComment(editingCommentId, {
+        message: editCommentText,
+      });
+      dispatch(updateComment(res));
       toast.success("Comment updated successfully");
       setIsEditModalOpen(false);
       setEditingCommentId(null);
       setEditCommentText("");
-    } catch {
+    } catch (error) {
+      console.error("Failed to update comment:", error);
       toast.error("Failed to update comment");
     }
   };
@@ -176,7 +199,7 @@ export default function PostDetail() {
     const now = new Date();
     const date = new Date(dateString);
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffInSeconds < 60) return `${diffInSeconds}s`;
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
@@ -203,7 +226,7 @@ export default function PostDetail() {
             <MessageCircle className="w-8 h-8 text-neutral-400" />
           </div>
           <p className="text-xl mb-6 text-white">Post not found</p>
-          <button 
+          <button
             onClick={() => navigate("/")}
             className="bg-sky-600 text-white px-8 py-3 rounded-full font-bold hover:bg-sky-500 transition-colors duration-200"
           >
@@ -220,7 +243,7 @@ export default function PostDetail() {
         {/* Header */}
         <div className="sticky top-0 z-10 backdrop-blur-xl bg-neutral-900/80 border-b border-neutral-800">
           <div className="flex items-center gap-4 p-4">
-            <button 
+            <button
               onClick={() => navigate(-1)}
               className="p-2 hover:bg-neutral-800 rounded-full transition-colors"
             >
@@ -250,10 +273,20 @@ export default function PostDetail() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-white">{post.author_username}</span>
+                <span className="font-bold text-white">
+                  {post.author_username}
+                </span>
                 <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                  <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-2.5 h-2.5 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               </div>
@@ -276,19 +309,19 @@ export default function PostDetail() {
           {/* Post Media */}
           {post.image && (
             <div className="mb-4 rounded-lg overflow-hidden">
-              <img 
-                src={post.image} 
-                alt="Post" 
-                className="w-full max-h-[500px] object-cover" 
+              <img
+                src={post.image}
+                alt="Post"
+                className="w-full max-h-[500px] object-cover"
               />
             </div>
           )}
           {post.video && (
             <div className="mb-4 rounded-lg overflow-hidden bg-black">
-              <video 
-                src={post.video} 
-                controls 
-                className="w-full h-auto max-h-[500px]" 
+              <video
+                src={post.video}
+                controls
+                className="w-full h-auto max-h-[500px]"
                 preload="metadata"
               />
             </div>
@@ -299,8 +332,8 @@ export default function PostDetail() {
             <button
               onClick={handleToggleLike}
               className={`flex items-center gap-2 p-2 rounded-full transition-colors ${
-                liked 
-                  ? "text-red-500 hover:bg-red-900/20" 
+                liked
+                  ? "text-red-500 hover:bg-red-900/20"
                   : "text-neutral-400 hover:bg-red-900/20 hover:text-red-500"
               }`}
             >
@@ -370,8 +403,11 @@ export default function PostDetail() {
                 <p>No comments yet. Be the first to comment!</p>
               </div>
             ) : (
-              comments.map((comment) => (
-                <div key={comment.id} className="border-b border-neutral-800 pb-4 last:border-b-0">
+              comments.map((comment: any) => (
+                <div
+                  key={comment.id}
+                  className="border-b border-neutral-800 pb-4 last:border-b-0"
+                >
                   <div className="flex gap-3">
                     <div className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-medium text-sm">
@@ -380,7 +416,9 @@ export default function PostDetail() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-white text-sm">{comment.user}</span>
+                        <span className="font-semibold text-white text-sm">
+                          {comment.user}
+                        </span>
                         <span className="text-neutral-400 text-xs">
                           {formatTimeAgo(comment.created_at)}
                         </span>
@@ -389,17 +427,17 @@ export default function PostDetail() {
                         {comment.message}
                       </p>
                     </div>
-                    
+
                     {comment.user === currentUser && (
                       <div className="flex gap-1">
-                        <button 
-                          onClick={() => handleEditComment(comment)} 
+                        <button
+                          onClick={() => handleEditComment(comment)}
                           className="p-1.5 text-neutral-400 hover:text-blue-400 hover:bg-neutral-800 rounded transition-colors"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
-                        <button 
-                          onClick={() => handleDeleteComment(comment.id)} 
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
                           className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -417,7 +455,9 @@ export default function PostDetail() {
         {isEditModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-neutral-800 border border-neutral-700 p-6 rounded-lg max-w-md w-full">
-              <h3 className="text-lg font-bold mb-4 text-white">Edit Comment</h3>
+              <h3 className="text-lg font-bold mb-4 text-white">
+                Edit Comment
+              </h3>
               <textarea
                 value={editCommentText}
                 onChange={(e) => setEditCommentText(e.target.value)}
@@ -455,8 +495,13 @@ export default function PostDetail() {
                 <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Trash2 className="w-8 h-8 text-red-400" />
                 </div>
-                <h3 className="text-lg font-bold mb-2 text-white">Delete Comment</h3>
-                <p className="text-neutral-300 mb-6">Are you sure you want to delete this comment? This action cannot be undone.</p>
+                <h3 className="text-lg font-bold mb-2 text-white">
+                  Delete Comment
+                </h3>
+                <p className="text-neutral-300 mb-6">
+                  Are you sure you want to delete this comment? This action
+                  cannot be undone.
+                </p>
                 <div className="flex justify-center gap-2">
                   <button
                     onClick={() => {

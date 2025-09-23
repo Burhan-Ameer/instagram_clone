@@ -69,7 +69,7 @@ API.interceptors.response.use(
   }
 );
 
-export const getPosts = async (page:number=1) => {
+export const getPosts = async (page: number = 1) => {
   const { data } = await API.get(`/posts/?page=${page}`);
   return data;
 };
@@ -168,7 +168,7 @@ export const getPostById = async (id: string) => {
   }
 };
 
-export const getCommentsForPost = async (postId:any) => {
+export const getCommentsForPost = async (postId: any) => {
   try {
     const res = await API.get(`/comments/?post=${postId}`);
     return res;
@@ -186,5 +186,19 @@ export const createComment = async (commentData: {
     return res;
   } catch (err) {
     throw err;
+  }
+};
+
+export const UpdateAPIComment = async (
+  id: any,
+  commentData: {
+    message: string;
+  }
+) => {
+  try {
+    const res = await API.put(`/comment/${id}`, commentData);
+    return res.data;
+  } catch (e) {
+    throw e;
   }
 };
