@@ -111,7 +111,6 @@ export default function PostCard({
     const fetchComments = async () => {
       try {
         const res = await getCommentsForPost(id);
-        console.log(`the comments for this post id ${id} `, res.data);
         if (res.data && Array.isArray(res.data)) {  
           setCommentCount(res.data.length);
         }
@@ -125,7 +124,6 @@ export default function PostCard({
     const fetchLikes = async () => {
       try {
         const res = await getLikedPosts(id);
-        console.log(res);
         if (res.data && Array.isArray(res.data)) {
           setLikeCount(res.data.length);
         }
