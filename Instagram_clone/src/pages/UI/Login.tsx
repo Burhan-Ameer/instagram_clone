@@ -21,12 +21,10 @@ export default function LoginPage() {
     try {
       // Your Login service should return the data object on success
       const data = await Login(formdata);
-      
-      // If the above line doesn't throw, the request was successful
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
-        
-      // 2. Show success toast
+      // Persist the email so ownership checks work on the feed
+      localStorage.setItem("user_email", formdata.email.trim().toLowerCase());
       toast.success("Logged in successfully!");
 
       // Navigate after a short delay to allow the user to see the toast
