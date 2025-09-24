@@ -61,56 +61,84 @@ export default function RegisterPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 text-white">
+    <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4 text-white">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-serif font-bold mb-2">Threads</h1>
-          <p className="text-gray-400">Join the conversation today.</p>
+          <p className="text-neutral-400">Join the conversation today.</p>
         </div>
 
-        <div className="bg-zinc-900 rounded-xl p-8 border border-zinc-800">
+        <div className="bg-neutral-900 rounded-xl p-8 border border-neutral-800">
           <form onSubmit={handleAccountCreate} className="space-y-5">
-            {/* These will now display the correct messages */}
             {error && <div className="p-3 bg-red-900/50 text-red-300 border border-red-700 rounded-lg">{error}</div>}
             {success && <div className="p-3 bg-green-900/50 text-green-300 border border-green-700 rounded-lg">{success}</div>}
             
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">Username</label>
-              <input id="username" name="username" type="text" required value={formData.username} onChange={handleChange} placeholder="Choose a username" className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-500" />
-            </div>
-            
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-              <input id="email" name="email" type="email" required value={formData.email} onChange={handleChange} placeholder="Enter your email" className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-500" />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">Password</label>
-              <input id="password" name="password" type="password" required value={formData.password} onChange={handleChange} placeholder="Create a password" className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-500" />
+              <label htmlFor="username" className="block text-sm font-medium text-white mb-2">Username</label>
+              <input
+                type="text"
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600 text-white placeholder-neutral-400"
+                placeholder="Enter your username"
+                required
+              />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
-              <input id="confirmPassword" name="confirmPassword" type="password" required value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm your password" className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-500" />
+              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">Email</label>
+              <input
+                type="email"
+                id="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600 text-white placeholder-neutral-400"
+                placeholder="Enter your email"
+                required
+              />
             </div>
 
-            <button type="submit" disabled={loading} className="w-full bg-white text-black py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50">
-              {loading ? "Creating Account..." : "Create Account"}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">Password</label>
+              <input
+                type="password"
+                id="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600 text-white placeholder-neutral-400"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-2">Confirm Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600 text-white placeholder-neutral-400"
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-sky-600 text-white py-3 rounded-lg font-bold hover:bg-sky-500 transition-colors duration-200 disabled:opacity-50"
+            >
+              {loading ? "Creating account..." : "Sign up"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-400">
+            <p className="text-neutral-400">
               Already have an account?{" "}
-              <Link to="/login" className="text-white hover:underline font-medium">Sign in</Link>
+              <Link to="/login" className="text-sky-500 hover:text-sky-400">Sign in</Link>
             </p>
           </div>
         </div>

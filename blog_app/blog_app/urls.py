@@ -47,6 +47,7 @@ from api.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("posts/",PostApiView.as_view()),
+    path("posts/search/",PostSearchView.as_view()),
     path("post/<int:pk>/",PostDetailApi.as_view()),
     path("comments/",CommentsApiView.as_view()),
     path("comment/<int:pk>",CommentUpdateDestroyApiView.as_view()),
@@ -54,6 +55,8 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("register/",RegisterView.as_view()),
+    path("users/", UserListView.as_view()),
+    path("user/", CurrentUserView.as_view()),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]

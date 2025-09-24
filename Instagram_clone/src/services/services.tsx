@@ -69,9 +69,10 @@ API.interceptors.response.use(
   }
 );
 
-export const getPosts = async (page: number = 1) => {
-  const { data } = await API.get(`/posts/?page=${page}`);
-  return data;
+export const getPosts = async (page: number = 1, params?: Record<string, string>) => {
+  const queryParams = new URLSearchParams({ page: page.toString(), ...params });
+  const { data } = await API.get(`/posts/?${queryParams}`);
+  return data.results || data;
 };
 
 export const register = async (userdata: {
@@ -197,6 +198,41 @@ export const UpdateAPIComment = async (
 ) => {
   try {
     const res = await API.put(`/comment/${id}`, commentData);
+    return res.data;
+  } catch (e) {
+    throw e;
+  }
+};
+
+export const searchPosts = async (query: string) => {
+  try {
+    const res = await API.get(`/posts/search/?q=${query}`);
+    return res.data.results || res.data;
+  } catch (e) {
+    throw e;
+  }
+};
+
+export const logout = () => {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  localStorage.removeItem("user_email");
+  localStorage.removeItem("user_username");
+  window.location.href = "/login/";
+};
+
+export const getUsers = async () => {
+  try {
+    const res = await API.get("/users/");
+    return res.data;
+  } catch (e) {
+    throw e;
+  }
+};
+
+export const getCurrentUser = async () => {
+  try {
+    const res = await API.get("/user/");
     return res.data;
   } catch (e) {
     throw e;

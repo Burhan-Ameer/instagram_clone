@@ -1,4 +1,4 @@
-import { Login } from "@/services/services";
+import { Login, getCurrentUser } from "@/services/services";
 import type React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,8 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
 
     try {
@@ -25,6 +24,8 @@ export default function LoginPage() {
       localStorage.setItem("refresh_token", data.refresh);
       // Persist the email so ownership checks work on the feed
       localStorage.setItem("user_email", formdata.email.trim().toLowerCase());
+      const user = await getCurrentUser();
+      localStorage.setItem("user_username", user.username);
       toast.success("Logged in successfully!");
 
       // Navigate after a short delay to allow the user to see the toast
@@ -45,6 +46,7 @@ export default function LoginPage() {
   };
 
   const handleformchange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('Input changed:', e.target.name, e.target.value);
     setFormData({
       ...formdata,
       [e.target.name]: e.target.value,
@@ -52,56 +54,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
-      <div className="w-full shadow-2xl  max-w-md p-8 rounded-2xl">
-        {/* Logo */}
+    <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4 text-white">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-black dark:text-white mb-3 animate-fade-in">
-            Social
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Welcome back! Please sign in to your account.
-          </p>
+          <h1 className="text-4xl font-serif font-bold mb-2">Threads</h1>
+          <p className="text-neutral-400">Join the conversation today.</p>
         </div>
 
-        {/* Login Form */}
-        <div className="rounded-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="transform transition-all duration-200">
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium  text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Email
-              </label>
+        <div className="bg-neutral-900 rounded-xl p-8 border border-neutral-800">
+          <div className="space-y-5">
+            {/* These will now display the correct messages */}
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">Email</label>
               <input
                 type="email"
-                name="email"
                 id="email"
+                name="email"
                 value={formdata.email}
                 onChange={handleformchange}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 bg-white dark:bg-black text-black dark:text-white"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600 text-white placeholder-neutral-400"
                 placeholder="Enter your email"
                 required
+                autoFocus
+                style={{ touchAction: 'manipulation' }}
               />
             </div>
 
-            <div className="transform transition-all duration-200">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Password
-              </label>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">Password</label>
               <input
                 type="password"
                 id="password"
-                value={formdata.password}
                 name="password"
+                value={formdata.password}
                 onChange={handleformchange}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 bg-white dark:bg-black text-black dark:text-white"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600 text-white placeholder-neutral-400"
                 placeholder="Enter your password"
                 required
+                style={{ touchAction: 'manipulation' }}
               />
             </div>
 
@@ -124,43 +115,37 @@ export default function LoginPage() {
             </div>
 
             <button
-              type="submit"
-              className="btn btn-lg w-full bg-zinc-950 text-white"
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full bg-sky-600 text-white py-3 rounded-lg font-bold hover:bg-sky-500 transition-colors duration-200 disabled:opacity-50"
             >
-             Sign in
+              {loading ? "Signing in..." : "Sign in"}
             </button>
-          </form>
+          </div>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-neutral-400">
               Don't have an account?{" "}
               <Link
                 to="/register"
-                className="text-black dark:text-white hover:underline font-medium"
+                className="text-sky-500 hover:text-sky-400"
               >
                 Sign up
               </Link>
             </p>
           </div>
-        </div>
 
-        {/* Social Login */}
-        <div className="mt-8">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white dark:bg-black text-gray-600 dark:text-gray-400">
-                Or continue with
-              </span>
-            </div>
+          <div className="relative flex justify-center text-sm my-6">
+            <span className="px-4 bg-neutral-900 text-neutral-400">
+              Or continue with
+            </span>
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors duration-200 group">
+            <button className="flex items-center justify-center px-4 py-3 border border-neutral-800 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors duration-200 group">
               <svg
-                className="w-6 h-6 mr-3 text-gray-700 dark:text-gray-300 group-hover:scale-110 transition-transform duration-200"
+                className="w-6 h-6 mr-3 text-neutral-400 group-hover:scale-110 transition-transform duration-200"
                 viewBox="0 0 24 24"
               >
                 <path
@@ -180,19 +165,19 @@ export default function LoginPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-gray-700 dark:text-gray-300 font-medium">
+              <span className="text-neutral-400 font-medium">
                 Google
               </span>
             </button>
-            <button className="flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors duration-200 group">
+            <button className="flex items-center justify-center px-4 py-3 border border-neutral-800 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors duration-200 group">
               <svg
-                className="w-6 h-6 mr-3 text-gray-700 dark:text-gray-300 group-hover:scale-110 transition-transform duration-200"
+                className="w-6 h-6 mr-3 text-neutral-400 group-hover:scale-110 transition-transform duration-200"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
               </svg>
-              <span className="text-gray-700 dark:text-gray-300 font-medium">
+              <span className="text-neutral-400 font-medium">
                 Twitter
               </span>
             </button>

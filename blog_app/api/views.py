@@ -8,9 +8,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.permissions import (AllowAny,IsAdminUser,IsAuthenticated)
 from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
+
 class PostApiView(APIView):
     def get(self, request):
-        posts = Post.objects.all().order_by('-created_at')  # Order by newest first
+        posts = Post.objects.all().order_by('-created_at')
+        author = request.query_params.get('author')
+        if author:
+            posts = posts.filter(author__username=author)
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(posts, request)
         serializer = PostSerializer(result_page, many=True, context={'request': request})
@@ -62,6 +67,21 @@ class PostDetailApi(APIView):
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)        
 
+
+
+class PostSearchView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [AllowAny]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        query = self.request.query_params.get('q', '')
+        if query:
+            return Post.objects.filter(
+                Q(content__icontains=query) | 
+                Q(author__username__icontains=query)
+            ).order_by('-created_at')
+        return Post.objects.none()
 
 
 class CommentsApiView(APIView):
@@ -134,3 +154,17 @@ class RegisterView(generics.CreateAPIView):
     queryset=CustomUser.objects.all()
     serializer_class =UserSerializers
     permission_classes=[AllowAny]
+
+
+class UserListView(generics.ListAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializers
+    permission_classes = [AllowAny]
+
+
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializers(request.user)
+        return Response(serializer.data)

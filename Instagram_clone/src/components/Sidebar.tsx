@@ -1,4 +1,6 @@
-import React from "react"
+
+import { logout } from "@/services/services";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   currentPage: string
@@ -11,9 +13,23 @@ export default function Sidebar({
   onNavigate,
   onCreatePost,
 }: SidebarProps) {
+  const navigate = useNavigate();
+
+  const getPath = (id: string) => {
+    const paths: { [key: string]: string } = {
+      home: '/',
+      explore: '/explore',
+      profiles: '/profiles',
+      notifications: '/notifications',
+      messages: '/messages',
+      profile: '/profile',
+    };
+    return paths[id] || '/';
+  };
   const menuItems = [
     { id: "home", label: "Home", icon: "home" },
     { id: "explore", label: "Explore", icon: "search" },
+    { id: "profiles", label: "Profiles", icon: "user" },
     { id: "notifications", label: "Notifications", icon: "bell" },
     { id: "messages", label: "Messages", icon: "mail" },
     { id: "profile", label: "Profile", icon: "user" },
@@ -78,12 +94,20 @@ export default function Sidebar({
           d="M12 6v6m0 0v6m0-6h6m-6 0H6"
         />
       ),
+      logout: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+        />
+      ),
     }
     return icons[iconName as keyof typeof icons]
   }
 
   return (
-    <div className="w-64 sm:w-72 h-screen bg-neutral-900 text-neutral-50 flex flex-col p-4 md:p-6 shadow-2xl rounded-tr-3xl rounded-br-3xl">
+    <div className="w-64 sm:w-72 h-screen bg-neutral-900 text-white flex flex-col p-4 md:p-6 shadow-2xl rounded-tr-3xl rounded-br-3xl">
       {/* Logo Section */}
       <div className="flex items-center gap-2 mb-8 pl-1">
         <span className="text-3xl font-extrabold tracking-tight">Social</span>
@@ -97,7 +121,7 @@ export default function Sidebar({
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => { onNavigate(item.id); navigate(getPath(item.id)); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ease-in-out ${
                 isActive
                   ? "bg-sky-600 text-white shadow-lg"
@@ -120,42 +144,26 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Action Button */}
+
+      {/* Logout Button */}
       <button
-        onClick={onCreatePost}
-        className="w-full flex items-center justify-center gap-2 mt-auto bg-sky-600 text-white py-3 rounded-full font-bold text-lg shadow-lg hover:bg-sky-500 transition-colors duration-200 mb-6"
+        onClick={() => {
+          if (window.confirm("Are you sure you want to logout?")) {
+            logout();
+          }
+        }}
+        className="w-full flex items-center justify-center gap-2 bg-neutral-800  text-white py-2 rounded-full font-bold text-sm shadow-lg hover:bg-gray-300 hover:text-neutral-950 transition-colors duration-200"
       >
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          {getIcon("plus")}
+          {getIcon("logout")}
         </svg>
-        <span className="hidden md:inline">Create Post</span>
+        Logout
       </button>
-
-      {/* User Profile Footer */}
-      <div className="flex items-center justify-between gap-3 p-3 rounded-full hover:bg-neutral-800 transition-colors duration-200 cursor-pointer">
-        <img
-          src="/user-profile-illustration.png"
-          alt="Profile"
-          className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-neutral-700"
-        />
-        <div className="flex-1 min-w-0 hidden md:block">
-          <p className="font-semibold text-white truncate">Your Name</p>
-          <p className="text-sm text-neutral-400 truncate">@yourusername</p>
-        </div>
-        <svg
-          className="w-6 h-6 text-neutral-500 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          {getIcon("more")}
-        </svg>
-      </div>
     </div>
   )
-} 
+}

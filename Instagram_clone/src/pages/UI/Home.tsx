@@ -9,15 +9,6 @@ import { addPost, setPosts } from "@/features/posts/postSlice";
 
 // Mock data for posts
 
-interface Post {
-  id: string;
-  author: string;
-  content: string;
-  image?: string;
-  video?: string;
-  created_at: string;
-}
-
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState("home");
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
@@ -27,8 +18,6 @@ export default function HomePage() {
   );
   // check if there is content available
   const [hasMore, setHasMore] = useState(true);
-  // flag to check if the content is loading or not for the first time 
-  const [isLoading, setIsLoading] = useState(false);
   // flag to check if there is content still available need to be loaded for each time when we click on loadmore button
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   // keep track of the page numbers
@@ -58,8 +47,6 @@ export default function HomePage() {
       } catch (error) {
         console.error("failed to fetch the posts", error);
         toast.error("Could not load Posts.");
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -211,7 +198,6 @@ export default function HomePage() {
                 timestamp={post.created_at}
                 likes={0}
                 comments={0}
-                shares={0}
                 currentUserEmail={currentUserEmail}
               />
             </div>
