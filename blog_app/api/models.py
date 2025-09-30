@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from cloudinary.models import CloudinaryField
+from django.utils import timezone
 
 class CustomUser(AbstractUser):
     profile_pic = CloudinaryField('profile_pic', blank=True, null=True)
@@ -40,3 +41,17 @@ class Likes(models.Model):
     
     def __str__(self):
         return f"{self.post} liked by {self.user}"
+
+# creating follow functionality by creating follow table 
+class Follow(models.Model):
+     # The user initiating the follow (User A follows User B)
+    # The related_name 'following' allows User A.following.all() to see who User A follows.
+    follower=models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name="following")
+    followed =models.ForeignKey(CustomUser,related_name="followers",on_delete=models.CASCADE)
+    
+    created_at=models.DateField(auto_now_add=True)
+    class Meta:
+        unique_together=("follower","followed")
+    def __str__(self):
+        """String for representing the Follow object."""
+        return f"{self.follower.username} follows {self.followed.username} "

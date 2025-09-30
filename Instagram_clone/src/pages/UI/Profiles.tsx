@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { getUsers } from "@/services/services";
+import {  FollowToggle, getUsers } from "@/services/services";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -40,6 +40,15 @@ export default function ProfilesPage() {
   const handleUserClick = (username: string) => {
     navigate(`/user/${username}`);
   };
+// follow functionality handler function
+const handleFollow =async(id:any)=>{
+const res=await FollowToggle(id)
+if(res==201){
+  console.log("followed createed ")
+}
+}
+
+
 
   return (
     <div className="flex min-h-screen bg-neutral-900 text-white relative">
@@ -132,6 +141,7 @@ export default function ProfilesPage() {
                         View Profile
                       </button>
                       <button
+                      onClick={() => handleFollow(user.id)}
                         className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                           user.is_following
                             ? "bg-neutral-600 text-neutral-400 cursor-not-allowed"

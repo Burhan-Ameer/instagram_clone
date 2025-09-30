@@ -1,19 +1,5 @@
-"""
-URL configuration for blog_app project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+# importing the views from the view.py file
+from api.views import *
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
@@ -38,12 +24,6 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-
-
-
-
-
-from api.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("posts/",PostApiView.as_view()),
@@ -57,6 +37,7 @@ urlpatterns = [
     path("register/",RegisterView.as_view()),
     path("users/", UserListView.as_view()),
     path("user/", CurrentUserView.as_view()),
+    path("follow/",FollowToggleView.as_view()),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]

@@ -69,7 +69,10 @@ API.interceptors.response.use(
   }
 );
 
-export const getPosts = async (page: number = 1, params?: Record<string, string>) => {
+export const getPosts = async (
+  page: number = 1,
+  params?: Record<string, string>
+) => {
   const queryParams = new URLSearchParams({ page: page.toString(), ...params });
   const { data } = await API.get(`/posts/?${queryParams}`);
   return data.results || data;
@@ -234,6 +237,18 @@ export const getCurrentUser = async () => {
   try {
     const res = await API.get("/user/");
     return res.data;
+  } catch (e) {
+    throw e;
+  }
+};
+
+// follow service function
+export const FollowToggle = async (UserId: any) => {
+  try {
+    const res = await API.post("/follow/", {
+      following: UserId,
+    });
+    return res.status;
   } catch (e) {
     throw e;
   }

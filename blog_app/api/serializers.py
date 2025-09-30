@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, CustomUser, Comment, Likes
+from .models import Post, CustomUser, Comment, Likes,Follow
 import cloudinary.utils
 
 class PostCreateSerializer(serializers.ModelSerializer):
@@ -93,7 +93,7 @@ class UserSerializers(serializers.ModelSerializer):
     
     class Meta:
         model=CustomUser
-        fields=("username","email","password","confirmPassword")
+        fields=( "id","username","email","password","confirmPassword")
         extra_kwargs={
             
             "password":{"write_only":True}
@@ -109,3 +109,13 @@ class UserSerializers(serializers.ModelSerializer):
             validated_data.pop("confirmPassword")
             user=CustomUser.objects.create_user(**validated_data)
             return user
+        
+        
+        
+class FollowSerializer(serializers.ModelSerializer):
+    follower=serializers.StringRelatedField()
+    followed =serializers.StringRelatedField()
+    
+    class Meta:
+        model=Follow
+        fields=("id","follower","followed")

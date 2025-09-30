@@ -1,14 +1,15 @@
 from rest_framework.response import Response
-from .serializers import PostSerializer,CommentSerializer,LikesSerializer,UserSerializers,PostCreateSerializer
+from .serializers import FollowSerializer, PostSerializer,CommentSerializer,LikesSerializer,UserSerializers,PostCreateSerializer
 from rest_framework.views import  APIView
 from rest_framework.viewsets import ModelViewSet
-from .models import Post,Comment,Likes,CustomUser
+from .models import Post,Comment,Likes,CustomUser,Follow
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.permissions import (AllowAny,IsAdminUser,IsAuthenticated)
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
+from rest_framework import viewsets
 
 class PostApiView(APIView):
     def get(self, request):
@@ -168,3 +169,26 @@ class CurrentUserView(APIView):
     def get(self, request):
         serializer = UserSerializers(request.user)
         return Response(serializer.data)
+    
+class FollowToggleView(APIView):
+    def post(self,request):
+        follower=request.user
+        followed_id=request.data.get("following")
+        
+        
+        if not followed_id:
+            return Response({"error": "following field is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            followed_id=int(followed_id)
+        except(ValueError,TypeError):
+            return Response({"error":"following field is required"},status=status.HTTP_400_BAD_REQUEST)
+        if follower.id == int(followed_id):
+            return Response({"error": "you cant follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
+
+        follow=Follow.objects.filter(follower=follower,followed_id=followed_id).first()
+        if follow:
+            follow.delete()
+            return Response({"message":"Unfollowed Successfully"},status=status.HTTP_200_OK)
+        
+        follow = Follow.objects.create(follower=follower, followed_id=followed_id)
+        return Response(FollowSerializer(follow).data, status=201)
