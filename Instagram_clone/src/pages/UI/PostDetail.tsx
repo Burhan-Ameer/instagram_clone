@@ -75,10 +75,10 @@ export default function PostDetail() {
   const comments = useSelector((state: any) => state.comments.items);
   useEffect(() => {
     const username =
-      localStorage.getItem("user_username") ||
       localStorage.getItem("user_email") ||
       "";
     setCurrentUser(username);
+    console.log(username)
 
     if (postId) {
       fetchPostData();
@@ -99,16 +99,17 @@ export default function PostDetail() {
       setLoading(false);
     }
   };
-
+// fetching the comments setting them into the global state 
   const fetchComments = async () => {
     try {
       const res = await getCommentsForPost(postId!);
       dispatch(setcomments(res.data));
+console.log(res.data)
     } catch (error) {
       console.error("Failed to fetch comments:", error);
     }
   };
-
+// fetching likes of specific post 
   const fetchLikes = async () => {
     try {
       const res = await getLikedPosts(postId!);

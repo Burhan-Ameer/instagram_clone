@@ -7,6 +7,7 @@ import ExplorePage from "./pages/UI/Explore";
 import ProfilesPage from "./pages/UI/Profiles";
 import ProfilePage from "./pages/UI/Profile";
 import UserProfilePage from "./pages/UI/UserProfile";
+import MessagesPage from "./pages/UI/Messages";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
   {
     path: "/user/:username",
     element: <UserProfilePage />,
+  },
+  {
+    path: "/messages",
+    element: <MessagesPage />,
   }
 ]);
 function App() {

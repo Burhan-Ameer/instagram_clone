@@ -107,7 +107,7 @@ export default function PostCard({
     const fetchComments = async () => {
       try {
         const res = await getCommentsForPost(id);
-        if (res.data && Array.isArray(res.data)) {  
+        if (res.data && Array.isArray(res.data)) {
           setCommentCount(res.data.length);
         }
       } catch (err) {
@@ -159,7 +159,9 @@ export default function PostCard({
 
   // author check function (fyi this is immediate call function read the w3school for further information )
   const isOwner = (() => {
-    const me = (localStorage.getItem("user_username") || "").trim().toLowerCase();
+    const me = (localStorage.getItem("user_username") || "")
+      .trim()
+      .toLowerCase();
     const authorUsername = (author?.username || "").trim().toLowerCase();
     if (!me || !authorUsername) return false;
     return me === authorUsername;

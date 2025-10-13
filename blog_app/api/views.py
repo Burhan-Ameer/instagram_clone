@@ -160,8 +160,12 @@ class RegisterView(generics.CreateAPIView):
 class UserListView(generics.ListAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializers
-    permission_classes = [AllowAny]
-
+    permission_classes = [IsAuthenticated]  # Add this
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]

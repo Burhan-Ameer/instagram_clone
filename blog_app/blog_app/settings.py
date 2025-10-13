@@ -13,6 +13,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -25,9 +26,9 @@ INSTALLED_APPS = [
     "corsheaders",
     'cloudinary',
     'cloudinary_storage',
-   # Needed for swagger UI
     'drf_yasg',
-    
+    'channels',
+    "chat",
 ]
 
 MIDDLEWARE = [
@@ -151,3 +152,12 @@ REST_FRAMEWORK = {
 
 }
 
+
+ASGI_APPLICATION = 'blog_app.asgi.application'  # fix: point to inner blog_app/asgi.py callable
+
+# Use in-memory layer for dev (no Redis required)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}

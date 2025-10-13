@@ -182,7 +182,7 @@ export const getCommentsForPost = async (postId: any) => {
 };
 
 export const createComment = async (commentData: {
-  message: string;
+  message: string;           
   post: string;
 }) => {
   try {

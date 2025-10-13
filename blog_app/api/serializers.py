@@ -90,15 +90,19 @@ class LikesSerializer(serializers.ModelSerializer):
         
 class UserSerializers(serializers.ModelSerializer):
     confirmPassword=serializers.CharField(style={"input_type":"password"},write_only=True)
-    
+    is_following =serializers.SerializerMethodField()
     class Meta:
         model=CustomUser
-        fields=( "id","username","email","password","confirmPassword")
+        fields=( "id","username","email","password","confirmPassword","is_following")
         extra_kwargs={
             
             "password":{"write_only":True}
         }
-        
+    def get_is_following(self,obj):
+        request=self.context.get("request")
+        if request and request.user.is_authenticated:
+            return Follow.objects.filter(follower=request.user,followed=obj).exists()
+        return False
     def validate(self,data):
         password=data.get("password")
         confirm_password=data.get("confirmPassword")

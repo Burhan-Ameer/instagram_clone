@@ -57,7 +57,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4 text-white">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-serif font-bold mb-2">Threads</h1>
+          <h1 className="text-4xl  font-bold mb-2">Social</h1>
           <p className="text-neutral-400">Join the conversation today.</p>
         </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import {  FollowToggle, getUsers } from "@/services/services";
+import { FollowToggle, getUsers } from "@/services/services";
+import { startChat } from "@/services/chatServices";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -18,6 +19,7 @@ export default function ProfilesPage() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,15 +42,36 @@ export default function ProfilesPage() {
   const handleUserClick = (username: string) => {
     navigate(`/user/${username}`);
   };
-// follow functionality handler function
-const handleFollow =async(id:any)=>{
-const res=await FollowToggle(id)
-if(res==201){
-  console.log("followed createed ")
-}
-}
+  // follow functionality handler function
+  const handleFollow = async (id: any) => {
+    const res = await FollowToggle(id);
+    if (res == 201) {
+      setUsers(
+        users.map((user) =>
+          user.id === id ? { ...user, is_following: true } : user
+        )
+      );
+    } else if (res == 200) {
+      setUsers(
+        users.map((user) =>
+          user.id === id ? { ...user, is_following: false } : user
+        )
+      );
+    }
+  };
 
-
+  // Start chat functionality
+  const handleStartChat = async (userId: string) => {
+    try {
+      const chatData = await startChat(parseInt(userId));
+      console.log(chatData)
+      toast.success('Chat started!');
+      navigate('/messages');
+    } catch (error) {
+      console.error('Failed to start chat:', error);
+      toast.error('Failed to start chat');
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-neutral-900 text-white relative">
@@ -101,7 +124,9 @@ if(res==201){
             </button>
             <div>
               <h1 className="text-2xl font-bold">Profiles</h1>
-              <p className="text-neutral-400">Discover and connect with other users</p>
+              <p className="text-neutral-400">
+                Discover and connect with other users
+              </p>
             </div>
           </div>
         </div>
@@ -125,12 +150,18 @@ if(res==201){
                       alt={user.username}
                       className="w-20 h-20 rounded-full object-cover border-4 border-neutral-700 mb-4"
                     />
-                    <h3 className="font-bold text-lg text-white mb-1">{user.username}</h3>
-                    <p className="text-sm text-neutral-400 mb-2">{user.email}</p>
+                    <h3 className="font-bold text-lg text-white mb-1">
+                      {user.username}
+                    </h3>
+                    <p className="text-sm text-neutral-400 mb-2">
+                      {user.email}
+                    </p>
                     {user.bio && (
-                      <p className="text-sm text-neutral-300 mb-4 line-clamp-2">{user.bio}</p>
+                      <p className="text-sm text-neutral-300 mb-4 line-clamp-2">
+                        {user.bio}
+                      </p>
                     )}
-                    <div className="flex gap-2 w-full">
+                    <div className="flex gap-2 flex-col w-full">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -140,16 +171,25 @@ if(res==201){
                       >
                         View Profile
                       </button>
-                      <button
-                      onClick={() => handleFollow(user.id)}
-                        className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-                          user.is_following
-                            ? "bg-neutral-600 text-neutral-400 cursor-not-allowed"
-                            : "bg-sky-600 text-white hover:bg-sky-500"
-                        }`}
-                      >
-                        {user.is_following ? "Following" : "Follow"}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleFollow(user.id)}
+                          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                            user.is_following
+                              ? "bg-neutral-600 text-neutral-400 cursor-not-allowed"
+                              : "bg-sky-600 text-white hover:bg-sky-500"
+                          }`}
+                        >
+                          {user.is_following ? "Following" : "Follow"}
+                        </button>
+                        <button
+                          onClick={() => handleStartChat(user.id)}
+                          className="bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-500 transition-colors"
+                          title="Start chat"
+                        >
+                          💬
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
